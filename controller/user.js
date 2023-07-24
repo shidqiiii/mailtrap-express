@@ -1,5 +1,6 @@
 const createError = require("http-errors");
 const Joi = require("joi");
+const bcrypt = require("bcrypt");
 const { User } = require("../db/models");
 
 const RegisterUser = async (req, res, next) => {
@@ -33,7 +34,8 @@ const RegisterUser = async (req, res, next) => {
             return next(createError(409, "Email telah digunakan"));
         }
 
-        await User.create({ name, email, password, is_verified: false });
+        const hashPassword = bcrypt.hashSync(password, 10);
+        await User.create({ name, email, password: hashPassword, is_verified: false });
         return res.status(201).json({ status: "Created", data: null });
     } catch (error) {
         console.log(error);
