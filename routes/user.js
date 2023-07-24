@@ -5,3 +5,5 @@ const router = express.Router();
 router.post("/register", RegisterUser);
 router.post("/login", LoginUser);
 router.post("/verify-otp", VerifyUser);
+
+module.exports = router;
