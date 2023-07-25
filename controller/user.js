@@ -68,7 +68,8 @@ const LoginUser = async (req, res, next) => {
 
     try {
         const checkEmail = await User.findOne({ where: { email: email } });
-        if (!checkEmail) {
+        const checkPassword = bcrypt.compareSync(password, checkEmail.password);
+        if (!checkEmail || !checkPassword) {
             return next(createError(404, "Validasi Gagal"));
         }
 
