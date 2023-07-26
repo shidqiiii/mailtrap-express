@@ -1,5 +1,7 @@
 const createError = require("http-errors");
 const Joi = require("joi");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const { User } = require("../db/models");
 const { SendverifyUser } = require("../email/email");
 
