@@ -14,7 +14,11 @@ const RegisterUser = async (req, res, next) => {
             "any.required": "Nama tidak boleh kosong",
             "string.min": "Nama tidak boleh kurang dari {#limit} karakter",
         }),
-        email: Joi.string().email().required(),
+        email: Joi.string().email().required().messages({
+            "string.empty": "Email tidak boleh kosong",
+            "string.email": "Email tidak valid",
+            "any.required": "Email tidak boleh kosong",
+        }),
         password: Joi.string().min(5).required().messages({
             "string.empty": "Password tidak boleh kosong",
             "any.required": "Password tidak boleh kosong",
@@ -23,7 +27,6 @@ const RegisterUser = async (req, res, next) => {
     });
 
     const validateBody = schema.validate({ name, email, password }, { abortEarly: false });
-
     if (validateBody.error) {
         // const error = validateBody.error.details.map((item) => ({ [item.context.key]: item.message }));
         return next(createError(400, "Validasi Gagal"));
@@ -31,7 +34,6 @@ const RegisterUser = async (req, res, next) => {
 
     try {
         const checkEmail = await User.findOne({ where: { email: email } });
-
         if (checkEmail) {
             return next(createError(409, "Email telah digunakan"));
         }
@@ -39,7 +41,6 @@ const RegisterUser = async (req, res, next) => {
         const hashPassword = bcrypt.hashSync(password, 10);
         const createUser = await User.create({ name, email, password: hashPassword, is_verified: false });
         SendverifyUser(createUser);
-
         return res.status(201).json({ status: "Created", data: null });
     } catch (error) {
         console.log(error);
