@@ -1,6 +1,7 @@
 const createError = require("http-errors");
 const Joi = require("joi");
 const { User } = require("../db/models");
+const { SendverifyUser } = require("../email/email");
 
 const RegisterUser = async (req, res, next) => {
     const { name, email, password } = req.body;
@@ -33,14 +34,53 @@ const RegisterUser = async (req, res, next) => {
             return next(createError(409, "Email telah digunakan"));
         }
 
-        await User.create({ name, email, password, is_verified: false });
+        const hashPassword = bcrypt.hashSync(password, 10);
+        const createUser = await User.create({ name, email, password: hashPassword, is_verified: false });
+        SendverifyUser(createUser);
+
         return res.status(201).json({ status: "Created", data: null });
     } catch (error) {
         console.log(error);
         next(createError(500));
     }
 };
-const LoginUser = (req, res, next) => {};
-const VerifyUser = (req, res, next) => {};
 
-module.exports = { RegisterUser, LoginUser, VerifyUser };
+const LoginUser = async (req, res, next) => {
+    const { email, password } = req.body;
+
+    const schema = Joi.object({
+        email: Joi.string().email().required().messages({
+            "string.empty": "Email tidak boleh kosong",
+            "string.email": "Email tidak valid",
+            "any.required": "Email tidak boleh kosong",
+        }),
+        password: Joi.string()
+            .required()
+            .messages({ "string.empty": "Password tidak boleh kosong", "any.required": "Password tidak boleh kosong" }),
+    });
+
+    const validateBody = schema.validate({ email, password }, { abortEarly: false });
+    if (validateBody.error) {
+        // const error = validateBody.error.details.map((item) => ({ [item.context.key]: item.message }));
+        return next(createError(400, "Validasi Gagal"));
+    }
+
+    try {
+        const checkEmail = await User.findOne({ where: { email: email } });
+        const checkPassword = bcrypt.compareSync(password, checkEmail.password);
+        if (!checkEmail || !checkPassword) {
+            return next(createError(404, "Validasi Gagal"));
+        }
+
+        const { name, is_verified } = checkEmail;
+        const token = jwt.sign({ name, email, is_verified }, process.env.SECRET_KEY, { expiresIn: "1h" });
+        return res.status(200).json({ status: "OK", data: { token: token } });
+    } catch (error) {
+        console.log(error);
+        next(createError(500));
+    }
+};
+
+const verifyUser = (req, res, next) => {};
+
+module.exports = { RegisterUser, LoginUser, verifyUser };
