@@ -1,19 +1,19 @@
+require("dotenv").config();
 const Email = require("email-templates");
 const path = require("path");
 
 const SendverifyUser = async (user) => {
-    console.log(user.name);
     const sendEmail = new Email({
         message: {
             from: "Mailtrap <noreply@email.com>",
         },
         send: true,
         transport: {
-            host: "smtp.mailtrap.io",
-            port: 2525,
+            host: process.env.MAIL_HOST,
+            port: process.env.MAIL_PORT,
             auth: {
-                user: "a6d427eed00946", // your Mailtrap username
-                pass: "2ad8e535bb21d8", //your Mailtrap password
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASSWORD,
             },
         },
         preview: false,
