@@ -84,6 +84,22 @@ const LoginUser = async (req, res, next) => {
     }
 };
 
-const verifyUser = (req, res, next) => {};
+const verifyUser = async (req, res, next) => {
+    const { user_id } = req.params;
+
+    try {
+        const checkUser = await User.findOne({ where: { user_id: user_id } });
+        if (!checkUser) {
+            return next(createError(404, "User tidak ditemukan"));
+        }
+
+        await User.update({ is_verified: true }, { where: { user_id: user_id } });
+
+        return res.status(200).json({ status: "OK", data: null });
+    } catch (error) {
+        console.log(error);
+        next(createError(500));
+    }
+};
 
 module.exports = { RegisterUser, LoginUser, verifyUser };
