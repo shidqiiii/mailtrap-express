@@ -3,6 +3,7 @@ const Joi = require("joi");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { User } = require("../db/models");
+const { SendverifyUser } = require("../email/email");
 
 const RegisterUser = async (req, res, next) => {
     const { name, email, password } = req.body;
@@ -38,7 +39,8 @@ const RegisterUser = async (req, res, next) => {
         }
 
         const hashPassword = bcrypt.hashSync(password, 10);
-        await User.create({ name, email, password: hashPassword, is_verified: false });
+        const createUser = await User.create({ name, email, password: hashPassword, is_verified: false });
+        SendverifyUser(createUser);
         return res.status(201).json({ status: "Created", data: null });
     } catch (error) {
         console.log(error);
@@ -82,6 +84,6 @@ const LoginUser = async (req, res, next) => {
     }
 };
 
-const VerifyUser = (req, res, next) => {};
+const verifyUser = (req, res, next) => {};
 
-module.exports = { RegisterUser, LoginUser, VerifyUser };
+module.exports = { RegisterUser, LoginUser, verifyUser };
